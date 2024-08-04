@@ -26,7 +26,25 @@ class TestTransformer(unittest.TestCase):
 class TestAttentionBlock(unittest.TestCase):
 
     def setUp(self):
-        self.attention_block = AttentionBlock()
+        self.attention_block = AttentionBlock(model_dimension=8, scaling_factor=10000)
+
+    def testComputePositionalEmbedding(self):
+        raise NotImplementedError
+
+    def testComputePositionalEmbeddingMatrix(self):
+        raise NotImplementedError
+
+    def testScalePositionalEmbedding(self):
+        """
+          30 * 10000^(2/8)
+        = 30 / 10000^(1/4)
+        = 30 / 10
+        = 3
+        """
+        token_index = 30
+        embedding_index = 2
+        result = self.attention_block.scalePositionalEmbedding(token_index, embedding_index)
+        self.assertEqual(result, 3)
 
     def testComputeAttentionOutputShape(self):
         test_key_dimension = 4
