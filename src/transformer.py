@@ -71,7 +71,7 @@ class AttentionBlock:
         # debate over whether this would even happen?)
         scaled_dot_products = dot_products / math.sqrt(key_dimension)
 
-        attention = softmax(scaled_dot_products) * values
+        attention = np.dot(softmax(scaled_dot_products), values)
         return attention
 
 
