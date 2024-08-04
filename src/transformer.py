@@ -25,30 +25,8 @@ class Transformer:
         self.num_layers = num_layers
         self.max_sequence_length = max_sequence_length
 
-
     def train(self):
         raise NotImplementedError
-
-
-    def computePositionalEmbeddingMatrix(self):
-        return np.fromfunction(
-            np.vectorize(self.computePositionalEmbedding),
-            (self.max_sequence_length, self.model_dimension)
-        )
-
-
-    def computePositionalEmbedding(self, token_index, embedding_index):
-        if embedding_index % 2 == 0:
-            return math.sin(self.scalePositionalEmbedding(token_index, embedding_index))
-        else:
-            return math.cos(self.scalePositionalEmbedding(token_index, embedding_index - 1))
-
-
-    def scalePositionalEmbedding(self, token_index, embedding_index):
-        return token_index / (
-            self.scaling_factor ** (embedding_index / self.model_dimension)
-        )
-
 
     def mask(self):
         raise NotImplementedError
@@ -60,9 +38,26 @@ class TransformerLayer:
 
 
 class AttentionBlock:
-    def __init__(self):
-        pass
+    def __init__(self, model_dimension, scaling_factor):
+        self.model_dimension = model_dimension
+        self.scaling_factor = scaling_factor
 
+    def computePositionalEmbeddingMatrix(self):
+        return np.fromfunction(
+            np.vectorize(self.computePositionalEmbedding),
+            (self.max_sequence_length, self.model_dimension)
+        )
+
+    def computePositionalEmbedding(self, token_index, embedding_index):
+        if embedding_index % 2 == 0:
+            return math.sin(self.scalePositionalEmbedding(token_index, embedding_index))
+        else:
+            return math.cos(self.scalePositionalEmbedding(token_index, embedding_index - 1))
+
+    def scalePositionalEmbedding(self, token_index, embedding_index):
+        return token_index / (
+            self.scaling_factor ** (embedding_index / self.model_dimension)
+        )
 
     def computeAttention(self, queries, keys, values):
         dot_products = np.dot(queries, np.transpose(keys))
