@@ -38,9 +38,10 @@ class TransformerLayer:
 
 
 class AttentionBlock:
-    def __init__(self, model_dimension, scaling_factor):
+    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
         self.model_dimension = model_dimension
         self.scaling_factor = scaling_factor
+        self.max_sequence_length = max_sequence_length
 
     def computePositionalEmbeddingMatrix(self):
         return np.fromfunction(
