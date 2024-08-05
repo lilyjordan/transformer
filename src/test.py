@@ -26,13 +26,24 @@ class TestTransformer(unittest.TestCase):
 class TestAttentionBlock(unittest.TestCase):
 
     def setUp(self):
-        self.attention_block = AttentionBlock(model_dimension=8, scaling_factor=10000)
+        self.attention_block = AttentionBlock(model_dimension=8, scaling_factor=10000, max_sequence_length=10)
 
-    def testComputePositionalEmbedding(self):
-        raise NotImplementedError
+    def testComputePositionalEmbeddingOdd(self):
+        token_index = 30
+        embedding_index = 1
+        self.attention_block.computePositionalEmbedding(token_index, embedding_index)
+        # TODO check against reference values
+
+    def testComputePositionalEmbeddingEven(self):
+        token_index = 30
+        embedding_index = 2
+        self.attention_block.computePositionalEmbedding(token_index, embedding_index)
+        # TODO check against reference values
 
     def testComputePositionalEmbeddingMatrix(self):
-        raise NotImplementedError
+        result = self.attention_block.computePositionalEmbeddingMatrix()
+        self.assertEqual(result.shape, (self.attention_block.max_sequence_length, self.attention_block.model_dimension))
+        # TODO check against reference values
 
     def testScalePositionalEmbedding(self):
         """
