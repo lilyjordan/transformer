@@ -42,7 +42,7 @@ class TestTransformer(unittest.TestCase):
 class TestAttentionHead(unittest.TestCase):
 
     def setUp(self):
-        self.attention_head = AttentionHead(model_dimension=8, scaling_factor=10000, max_sequence_length=10)
+        self.attention_head = AttentionHead()
 
     def testComputeAttentionOutputShape(self):
         test_key_dimension = 4
