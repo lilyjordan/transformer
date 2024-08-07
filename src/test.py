@@ -101,7 +101,18 @@ class TestAttentionHead(unittest.TestCase):
         np.testing.assert_almost_equal(result, expected, decimal=2)
 
     def testCausalMask(self):
-        pass
+        input = np.array([
+            [1., .2, .3],
+            [4., 5., 6.],
+            [7., 8., 9.]
+        ])
+        expected = np.array([
+            [1., -np.inf, -np.inf],
+            [4., 5., -np.inf],
+            [7., 8., 9.]
+        ])
+        result = self.attention_head.causal_mask(input)
+        np.testing.assert_equal(result, expected)
   
 
 class TestUtils(unittest.TestCase):
