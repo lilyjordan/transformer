@@ -52,10 +52,8 @@ class TransformerLayer:
 
 
 class AttentionHead:
-    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
-        self.model_dimension = model_dimension
-        self.scaling_factor = scaling_factor
-        self.max_sequence_length = max_sequence_length
+    def __init__(self):
+        pass
 
     def computeAttention(self, queries, keys, values):
         dot_products = np.dot(queries, np.transpose(keys))
@@ -63,7 +61,7 @@ class AttentionHead:
         # Scale down to mitigate vanishing gradients (speculatively; there may be some
         # debate over whether this would even happen?)
         scaled_dot_products = dot_products / math.sqrt(key_dimension)
-        masked_scaled_dot_products = self.mask(scaled_dot_products)
+        masked_scaled_dot_products = self.causal_mask(scaled_dot_products)
 
         # print('\nmasked_scaled_dot_products:', masked_scaled_dot_products)
         softmaxes = np.apply_along_axis(softmax, 1, masked_scaled_dot_products)
@@ -73,7 +71,7 @@ class AttentionHead:
         # print('\nattention:', attention)
         return attention
 
-    def mask(self, weights):
+    def causal_mask(self, weights):
         """
         "We implement this inside of scaled dot-product attention by masking out
         (setting to −∞) all values in the input of the softmax which correspond to
@@ -81,8 +79,8 @@ class AttentionHead:
         intuitively, you shouldn't be able to query a key where the key is at a later
         position than the query
         """
-        lookahead_mask = np.fromfunction((lambda x, y: x < y), weights.shape)
-        masked_weights = np.ma.masked_array(weights, mask=lookahead_mask)
+        causal_mask = np.fromfunction((lambda x, y: x < y), weights.shape)
+        masked_weights = np.ma.masked_array(weights, mask=causal_mask)
         filled = masked_weights.filled(-np.inf)
         return filled
 

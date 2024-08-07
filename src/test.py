@@ -99,6 +99,9 @@ class TestAttentionHead(unittest.TestCase):
 
         result = self.attention_head.computeAttention(queries, keys, values) 
         np.testing.assert_almost_equal(result, expected, decimal=2)
+
+    def testCausalMask(self):
+        pass
   
 
 class TestUtils(unittest.TestCase):
