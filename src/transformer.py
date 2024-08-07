@@ -1,12 +1,12 @@
 import numpy as np
 import math
-from utils import softmax
+from utils import softmax, relu
 
 
 class Transformer:
     def __init__(self, key_dimension=64, value_dimension=64, model_dimension=512,
-                 scaling_factor=10000, num_heads=8, num_layers=6,
-                 max_sequence_length=512):
+                 feed_forward_dimension=2048, scaling_factor=10000, num_heads=8,
+                 num_layers=6, max_sequence_length=512):
         """
         The key_dimension and value_dimension defaults are both chosen
         to be model_dimension divided by value_dimension (64 * 8 = 512),
@@ -20,6 +20,7 @@ class Transformer:
         self.key_dimension = key_dimension
         self.value_dimension = value_dimension
         self.model_dimension = model_dimension
+        self.feed_forward_dimension = feed_forward_dimension
         self.scaling_factor = scaling_factor
         self.num_heads = num_heads
         self.num_layers = num_layers
@@ -49,6 +50,50 @@ class Transformer:
 class TransformerLayer:
     def __init__(self):
         pass
+    # three components:
+    # multihead attention
+    # add and norm
+    # feedforward
+    """
+    We employ a residual connection [11] around each of
+    the two sub-layers, followed by layer normalization [1]. That is, the output of each sub-layer is
+    LayerNorm(x + Sublayer(x)), where Sublayer(x) is the function implemented by the sub-layer
+    itself.
+    """
+    def computeResidual(input, sublayer_function):
+        pass
+
+    def normalizeOutput(weights):
+        pass
+
+
+class MultiHeadAttention:
+    def __init__(self, num_heads, model_dimension):
+        self.num_heads = num_heads
+        self.model_dimension = model_dimension
+        self.heads = []
+        for _ in range(self.num_heads):
+            self.heads.append(AttentionHead())
+
+    def computeMultiHeadAttention(
+            self,
+            queries,
+            keys,
+            values,
+            query_projection,
+            key_projection,
+            value_projection,
+            overall_projection
+        ):
+        concatenated_attentions = np.array([])
+        for head in self.heads:
+            single_head_attention = head.computeAttention(
+                np.dot(queries, query_projection),
+                np.dot(keys, key_projection),
+                np.dot(values, value_projection)
+            )
+            concatenated_attentions.append(single_head_attention)
+        return np.dot(concatenated_attentions, overall_projection)
 
 
 class AttentionHead:
@@ -83,5 +128,17 @@ class AttentionHead:
 
 
 class FeedForwardNetwork:
-    def __init__(self):
-        pass
+    def __init__(self, layer_dimension):
+        self.layer_dimension = layer_dimension
+
+        self.layer1_weights = np.zeroes(self.layer_dimension)
+        self.layer2_weights = np.zeroes(self.layer_dimension)
+
+        self.layer1_biases = np.zeroes(self.layer_dimension)
+        self.layer2_biases = np.zeroes(self.layer_dimension)
+
+    def forward_pass(self, input):
+        layer1_output = np.dot(input, self.layer1_weights) + self.layer1_biases
+        layer2_input = relu(layer1_output)
+        layer2_output = np.dot(layer2_input, self.layer2_weights) + self.layer2_biases
+        return layer2_output
