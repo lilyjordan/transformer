@@ -97,7 +97,7 @@ class TestAttentionHead(unittest.TestCase):
             [-0.1366,  0.2537,  0.3984, -0.3301,  0.5333],
             [-0.3391,  0.3840,  0.2874,  0.0289,  0.6813]])
 
-        result = self.attention_head.computeAttention(queries, keys, values) 
+        result = self.attention_head.computeAttention(queries, keys, values, mask=False)
         np.testing.assert_almost_equal(result, expected, decimal=2)
 
     def testCausalMask(self):

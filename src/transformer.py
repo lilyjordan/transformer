@@ -55,20 +55,17 @@ class AttentionHead:
     def __init__(self):
         pass
 
-    def computeAttention(self, queries, keys, values):
+    def computeAttention(self, queries, keys, values, mask=True):
         dot_products = np.dot(queries, np.transpose(keys))
         key_dimension = keys.shape[1]
         # Scale down to mitigate vanishing gradients (speculatively; there may be some
         # debate over whether this would even happen?)
         scaled_dot_products = dot_products / math.sqrt(key_dimension)
-        masked_scaled_dot_products = self.causal_mask(scaled_dot_products)
+        if mask:
+            scaled_dot_products = self.causal_mask(scaled_dot_products)
 
-        # print('\nmasked_scaled_dot_products:', masked_scaled_dot_products)
-        softmaxes = np.apply_along_axis(softmax, 1, masked_scaled_dot_products)
-        # print('\nsoftmaxes:', softmaxes)
-        # print('\nvalues:', values)
+        softmaxes = np.apply_along_axis(softmax, 1, scaled_dot_products)
         attention = np.dot(softmaxes, values)
-        # print('\nattention:', attention)
         return attention
 
     def causal_mask(self, weights):
