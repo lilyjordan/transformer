@@ -28,21 +28,6 @@ class Transformer:
     def train(self):
         raise NotImplementedError
 
-    def mask(self):
-        raise NotImplementedError
-
-
-class TransformerLayer:
-    def __init__(self):
-        pass
-
-
-class AttentionBlock:
-    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
-        self.model_dimension = model_dimension
-        self.scaling_factor = scaling_factor
-        self.max_sequence_length = max_sequence_length
-
     def computePositionalEmbeddingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEmbedding),
@@ -60,16 +45,46 @@ class AttentionBlock:
             self.scaling_factor ** (embedding_index / self.model_dimension)
         )
 
+
+class TransformerLayer:
+    def __init__(self):
+        pass
+
+
+class AttentionHead:
+    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
+        self.model_dimension = model_dimension
+        self.scaling_factor = scaling_factor
+        self.max_sequence_length = max_sequence_length
+
     def computeAttention(self, queries, keys, values):
         dot_products = np.dot(queries, np.transpose(keys))
         key_dimension = keys.shape[1]
         # Scale down to mitigate vanishing gradients (speculatively; there may be some
         # debate over whether this would even happen?)
         scaled_dot_products = dot_products / math.sqrt(key_dimension)
+        masked_scaled_dot_products = self.mask(scaled_dot_products)
 
-        softmaxes = np.apply_along_axis(softmax, 1, scaled_dot_products)
+        # print('\nmasked_scaled_dot_products:', masked_scaled_dot_products)
+        softmaxes = np.apply_along_axis(softmax, 1, masked_scaled_dot_products)
+        # print('\nsoftmaxes:', softmaxes)
+        # print('\nvalues:', values)
         attention = np.dot(softmaxes, values)
+        # print('\nattention:', attention)
         return attention
+
+    def mask(self, weights):
+        """
+        "We implement this inside of scaled dot-product attention by masking out
+        (setting to −∞) all values in the input of the softmax which correspond to
+        illegal connections."
+        intuitively, you shouldn't be able to query a key where the key is at a later
+        position than the query
+        """
+        lookahead_mask = np.fromfunction((lambda x, y: x < y), weights.shape)
+        masked_weights = np.ma.masked_array(weights, mask=lookahead_mask)
+        filled = masked_weights.filled(-np.inf)
+        return filled
 
 
 class FeedForwardNetwork:
