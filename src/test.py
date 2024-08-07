@@ -1,48 +1,29 @@
 import unittest
-from transformer import Transformer, AttentionBlock
+from transformer import Transformer, AttentionHead
 from utils import softmax
 import numpy as np
 
 
-""""
 class TestTransformer(unittest.TestCase):
 
     def setUp(self):
-        self.transformer = Transformer()
-
-    def test_method1(self):
-        result = self.transformer.method1()
-        self.assertEqual(result, expected_result)
-
-    def test_method2(self):
-        result = self.transformer.method2()
-        self.assertTrue(result)
-
-    def test_method3(self):
-        with self.assertRaises(ExpectedException):
-            self.transformer.method3()
-"""
-
-class TestAttentionBlock(unittest.TestCase):
-
-    def setUp(self):
-        self.attention_block = AttentionBlock(model_dimension=8, scaling_factor=10000, max_sequence_length=10)
+        self.transformer = Transformer(model_dimension=8)
 
     def testComputePositionalEmbeddingOdd(self):
         token_index = 30
         embedding_index = 1
-        self.attention_block.computePositionalEmbedding(token_index, embedding_index)
+        self.transformer.computePositionalEmbedding(token_index, embedding_index)
         # TODO check against reference values
 
     def testComputePositionalEmbeddingEven(self):
         token_index = 30
         embedding_index = 2
-        self.attention_block.computePositionalEmbedding(token_index, embedding_index)
+        self.transformer.computePositionalEmbedding(token_index, embedding_index)
         # TODO check against reference values
 
     def testComputePositionalEmbeddingMatrix(self):
-        result = self.attention_block.computePositionalEmbeddingMatrix()
-        self.assertEqual(result.shape, (self.attention_block.max_sequence_length, self.attention_block.model_dimension))
+        result = self.transformer.computePositionalEmbeddingMatrix()
+        self.assertEqual(result.shape, (self.transformer.max_sequence_length, self.transformer.model_dimension))
         # TODO check against reference values
 
     def testScalePositionalEmbedding(self):
@@ -54,8 +35,14 @@ class TestAttentionBlock(unittest.TestCase):
         """
         token_index = 30
         embedding_index = 2
-        result = self.attention_block.scalePositionalEmbedding(token_index, embedding_index)
+        result = self.transformer.scalePositionalEmbedding(token_index, embedding_index)
         self.assertEqual(result, 3)
+
+
+class TestAttentionHead(unittest.TestCase):
+
+    def setUp(self):
+        self.attention_head = AttentionHead(model_dimension=8, scaling_factor=10000, max_sequence_length=10)
 
     def testComputeAttentionOutputShape(self):
         test_key_dimension = 4
@@ -66,7 +53,7 @@ class TestAttentionBlock(unittest.TestCase):
         keys = np.random.randn(test_sequence_length, test_key_dimension)
         values = np.random.randn(test_sequence_length, test_value_dimension)
 
-        result = self.attention_block.computeAttention(queries, keys, values)
+        result = self.attention_head.computeAttention(queries, keys, values)
         np.testing.assert_equal(result.shape, np.array([test_sequence_length, test_value_dimension]))
 
     def testComputeAttention(self):
@@ -110,7 +97,7 @@ class TestAttentionBlock(unittest.TestCase):
             [-0.1366,  0.2537,  0.3984, -0.3301,  0.5333],
             [-0.3391,  0.3840,  0.2874,  0.0289,  0.6813]])
 
-        result = self.attention_block.computeAttention(queries, keys, values) 
+        result = self.attention_head.computeAttention(queries, keys, values) 
         np.testing.assert_almost_equal(result, expected, decimal=2)
   
 
