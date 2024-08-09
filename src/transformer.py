@@ -67,11 +67,19 @@ class TransformerLayer:
     LayerNorm(x + Sublayer(x)), where Sublayer(x) is the function implemented by the sub-layer
     itself."
     """
-    def computeResidual(input, sublayer_function):
-        return sublayer_function(input) - input
-
-    def normalizeOutput(weights):
+    def forwardPass(self):
         pass
+
+
+    @staticmethod
+    def computeResidual(input, sublayer_function):
+        return input + sublayer_function(input)
+
+    @staticmethod
+    def normalize(weights):
+        EPSILON = 1e-8
+        sqrt_variance = np.sqrt(np.var(weights))
+        return weights - np.mean(weights) / sqrt_variance + EPSILON
 
 
 class MultiHeadAttention:
