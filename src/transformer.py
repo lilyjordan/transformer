@@ -29,6 +29,12 @@ class Transformer:
     def train(self):
         raise NotImplementedError
 
+    def forwardPass(self):
+        raise NotImplementedError
+
+    def backprop(self):
+        raise NotImplementedError
+
     def computePositionalEmbeddingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEmbedding),
@@ -48,8 +54,9 @@ class Transformer:
 
 
 class TransformerLayer:
-    def __init__(self):
-        pass
+    def __init__(self, num_heads, model_dimension):
+        self.multi_head_attention = MultiHeadAttention(num_heads, model_dimension)
+        self.feed_forward_network = FeedForwardNetwork()
     # three components:
     # multihead attention
     # add and norm
