@@ -54,9 +54,9 @@ class Transformer:
 
 
 class TransformerLayer:
-    def __init__(self, num_heads, model_dimension):
+    def __init__(self, num_heads, model_dimension, feed_forward_dimension):
         self.multi_head_attention = MultiHeadAttention(num_heads, model_dimension)
-        self.feed_forward_network = FeedForwardNetwork()
+        self.feed_forward_network = FeedForwardNetwork(model_dimension, feed_forward_dimension)
     # three components:
     # multihead attention
     # add and norm
@@ -68,7 +68,7 @@ class TransformerLayer:
     itself."
     """
     def forwardPass(self):
-        pass
+        self.multi_head_attention.computeMultiHeadAttention()
 
 
     @staticmethod
@@ -83,12 +83,29 @@ class TransformerLayer:
 
 
 class MultiHeadAttention:
-    def __init__(self, num_heads, model_dimension):
+    def __init__(self,
+                 num_heads,
+                 model_dimension,
+                 key_dimension,
+                 value_dimension,
+                 max_sequence_length
+                 ):
         self.num_heads = num_heads
         self.model_dimension = model_dimension
+
         self.heads = []
         for _ in range(self.num_heads):
             self.heads.append(AttentionHead())
+
+        # TODO are these in/out dimensions right? Is this even the right way to initialize?
+        self.queries = xavier_initialize(max_sequence_length, key_dimension)
+        self.keys = xavier_initialize(max_sequence_length, key_dimension)
+        self.values = xavier_initialize(max_sequence_length, value_dimension)
+
+        self.query_projection = xavier_initialize(model_dimension, key_dimension)
+        self.key_projection = xavier_initialize(model_dimension, key_dimension)
+        self.value_projection = xavier_initialize(model_dimension, value_dimension)
+        self.overall_projection = xavier_initialize(model_dimension * num_heads, model_dimension)
 
     def computeMultiHeadAttention(
             self,
