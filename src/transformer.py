@@ -55,13 +55,13 @@ class TransformerLayer:
     # add and norm
     # feedforward
     """
-    We employ a residual connection [11] around each of
+    "We employ a residual connection [11] around each of
     the two sub-layers, followed by layer normalization [1]. That is, the output of each sub-layer is
     LayerNorm(x + Sublayer(x)), where Sublayer(x) is the function implemented by the sub-layer
-    itself.
+    itself."
     """
     def computeResidual(input, sublayer_function):
-        pass
+        return sublayer_function(input) - input
 
     def normalizeOutput(weights):
         pass
