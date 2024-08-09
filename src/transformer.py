@@ -122,13 +122,13 @@ class AttentionHead:
         # debate over whether this would even happen?)
         scaled_dot_products = dot_products / math.sqrt(key_dimension)
         if mask:
-            scaled_dot_products = self.causal_mask(scaled_dot_products)
+            scaled_dot_products = self.causalMask(scaled_dot_products)
 
         softmaxes = np.apply_along_axis(softmax, 1, scaled_dot_products)
         attention = np.dot(softmaxes, values)
         return attention
 
-    def causal_mask(self, weights):
+    def causalMask(self, weights):
         """
         "We implement this inside of scaled dot-product attention by masking out
         (setting to −∞) all values in the input of the softmax which correspond to
