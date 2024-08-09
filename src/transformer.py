@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from utils import softmax, relu
+from utils import softmax, relu, xavier_initialize
 
 
 class Transformer:
@@ -128,17 +128,23 @@ class AttentionHead:
 
 
 class FeedForwardNetwork:
-    def __init__(self, layer_dimension):
-        self.layer_dimension = layer_dimension
+    def __init__(self, model_dimension, feed_forward_dimension):
+        self.model_dimension = model_dimension
 
-        self.layer1_weights = np.zeroes(self.layer_dimension)
-        self.layer2_weights = np.zeroes(self.layer_dimension)
+        self.hidden_layer_weights = xavier_initialize(model_dimension, feed_forward_dimension)
+        self.hidden_layer_biases = np.zeros(feed_forward_dimension)
 
-        self.layer1_biases = np.zeroes(self.layer_dimension)
-        self.layer2_biases = np.zeroes(self.layer_dimension)
+        self.output_layer_weights = xavier_initialize(feed_forward_dimension, model_dimension)
+        self.output_layer_biases = np.zeros(model_dimension)
 
-    def forward_pass(self, input):
-        layer1_output = np.dot(input, self.layer1_weights) + self.layer1_biases
-        layer2_input = relu(layer1_output)
-        layer2_output = np.dot(layer2_input, self.layer2_weights) + self.layer2_biases
-        return layer2_output
+    def forwardPass(self, input):
+        if len(input) != self.model_dimension:
+            raise ValueError(f"""Input array has length {len(input)} but should have
+                            dimensions {self.model_dimension}""")
+
+        hidden_layer_pre_activation = (np.dot(self.hidden_layer_weights, input) +
+                                       self.hidden_layer_biases)
+        hidden_layer_post_activation = np.vectorize(relu)(hidden_layer_pre_activation)
+        output = (np.dot(self.output_layer_weights, hidden_layer_post_activation) +
+                  self.output_layer_biases)
+        return output
