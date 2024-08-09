@@ -11,3 +11,8 @@ def softmax(vec):
 
 def relu(x):
     return max(0, x)
+
+
+def xavier_initialize(in_dimension, out_dimension):
+    limit = np.sqrt(6 / (in_dimension + out_dimension))
+    return np.random.uniform(-limit, limit, (in_dimension, out_dimension))
