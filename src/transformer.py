@@ -177,13 +177,9 @@ class FeedForwardNetwork:
         self.output_layer_biases = np.zeros(model_dimension)
 
     def forwardPass(self, input):
-        if len(input) != self.model_dimension:
-            raise ValueError(f"""Input array has length {len(input)} but should have
-                            dimensions {self.model_dimension}""")
-
-        hidden_layer_pre_activation = (np.dot(self.hidden_layer_weights, input) +
+        hidden_layer_pre_activation = (np.dot(input, self.hidden_layer_weights) +
                                        self.hidden_layer_biases)
-        hidden_layer_post_activation = np.vectorize(relu)(hidden_layer_pre_activation)
-        output = (np.dot(self.output_layer_weights, hidden_layer_post_activation) +
+        hidden_layer_post_activation = relu(hidden_layer_pre_activation)
+        output = (np.dot(hidden_layer_post_activation, self.output_layer_weights) +
                   self.output_layer_biases)
         return output

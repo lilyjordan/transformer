@@ -10,7 +10,7 @@ def softmax(vec):
 
 
 def relu(x):
-    return max(0, x)
+    return np.maximum(0, x)
 
 
 def xavier_initialize(in_dimension, out_dimension):
@@ -18,5 +18,6 @@ def xavier_initialize(in_dimension, out_dimension):
     return np.random.uniform(-limit, limit, (in_dimension, out_dimension))
 
 
-def tokenize(string):
-    raise NotImplementedError
+"""
+"Even if our efforts of attention seem for years to be producing no result, one day a light that is in exact proportion to them will flood the soul."
+"""
