@@ -88,6 +88,10 @@ class TransformerLayer:
         sqrt_variance = np.sqrt(np.var(weights))
         return weights - np.mean(weights) / sqrt_variance + EPSILON
 
+    def add_and_norm(self, layer_input, layer_output):
+        residual = layer_input + layer_output
+        normed = self.normalize(residual)
+        return normed
 
 class MultiHeadAttention:
     def __init__(self,
