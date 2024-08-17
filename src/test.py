@@ -47,19 +47,24 @@ class TestTransformer(unittest.TestCase):
 class TestAttentionHead(unittest.TestCase):
 
     def setUp(self):
-        self.attention_head = AttentionHead()
+        self.test_model_dimension = 6
+        self.test_key_dimension = 4
+        self.test_value_dimension = 5
+        self.test_sequence_length = 6
+
+        self.attention_head = AttentionHead(
+            self.test_model_dimension,
+            self.test_key_dimension,
+            self.test_value_dimension,
+        )
 
     def testComputeAttentionOutputShape(self):
-        test_key_dimension = 4
-        test_value_dimension = 5
-        test_sequence_length = 6
-
-        queries = np.random.randn(test_sequence_length, test_key_dimension)
-        keys = np.random.randn(test_sequence_length, test_key_dimension)
-        values = np.random.randn(test_sequence_length, test_value_dimension)
+        queries = np.random.randn(self.test_sequence_length, self.test_key_dimension)
+        keys = np.random.randn(self.test_sequence_length, self.test_key_dimension)
+        values = np.random.randn(self.test_sequence_length, self.test_value_dimension)
 
         result = self.attention_head.computeAttention(queries, keys, values)
-        np.testing.assert_equal(result.shape, np.array([test_sequence_length, test_value_dimension]))
+        np.testing.assert_equal(result.shape, np.array([self.test_sequence_length, self.test_value_dimension]))
 
     def testComputeAttention(self):
         """
@@ -116,7 +121,7 @@ class TestAttentionHead(unittest.TestCase):
             [4., 5., -np.inf],
             [7., 8., 9.]
         ])
-        result = self.attention_head.causal_mask(input)
+        result = self.attention_head.causalMask(input)
         np.testing.assert_equal(result, expected)
   
 
