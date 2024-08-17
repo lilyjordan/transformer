@@ -7,8 +7,10 @@ from transformers import GPT2TokenizerFast
 class Transformer:
     def __init__(self, key_dimension=64, value_dimension=64, model_dimension=512,
                  feed_forward_dimension=2048, scaling_factor=10000, num_heads=8,
-                 num_layers=6, max_sequence_length=512):
+                 num_layers=6, max_sequence_length=200):
         """
+        "Absolutely unmixed attention is prayer." -Simone Weil
+
         The key_dimension and value_dimension defaults are both chosen
         to be model_dimension divided by value_dimension (64 * 8 = 512),
         but that choice is somewhat arbitrary, so it isn't hard-coded
@@ -17,6 +19,9 @@ class Transformer:
         I can't tell from the paper what they use for the max sequence length,
         or even whether they use a single uniform max sequence length; TODO
         figure that out?
+        Looks like 512 is standard (I think? double check?), or that's what
+        they used or something, but I'm setting to 200 for the time being
+        for testing so as not to confuse it with the model dimension.
         """
         self.key_dimension = key_dimension
         self.value_dimension = value_dimension
@@ -27,13 +32,48 @@ class Transformer:
         self.num_layers = num_layers
         self.max_sequence_length = max_sequence_length
 
-    def train(self):
+        self.layers = []
+        for _ in range(self.num_layers):
+            self.layers.append(TransformerLayer(
+                self.num_heads,
+                self.key_dimension,
+                self.value_dimension,
+                self.model_dimension,
+                self.feed_forward_dimension,
+                self.max_sequence_length
+            ))
+
+        #  TODO are these dimensions right?
+        self.embeddings = xavier_initialize(in_dimension=model_dimension, out_dimension=1)
+
+        self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
+
+    def train(self, inputs):
+        #  TODO create a batch_size instance variable in the constructor
+        #  and then split the input into batches
         raise NotImplementedError
 
-    def forwardPass(self):
+    def train_on_batch(self, batch):
+        # TODO implement
+        pass
+
+    def forwardPass(self, input_embedding):
+        current = input_embedding
+        for layer in self.layers:
+            current = layer.forwardPass(current)
+        #  TODO there's something in here called "linear" in the architecture diagram
+        return softmax(current)
+
+    def computeGradient(self):
+        # TODO implement
         raise NotImplementedError
 
-    def backprop(self):
+    def updateWeights(self):
+        """
+        "If we turn our mind toward the good, it is impossible that little by little the
+        whole soul will not be attracted thereto in spite of itself." -Simone Weil
+        """
+         #  TODO I think we'll want off-the-shelf Adam for this
         raise NotImplementedError
 
     def tokenize(self, input):
@@ -42,6 +82,7 @@ class Transformer:
         """
         tokens = self.tokenizer(input)['input_ids']
         return tokens
+
     def computePositionalEmbeddingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEmbedding),
@@ -61,26 +102,30 @@ class Transformer:
 
 
 class TransformerLayer:
-    def __init__(self, num_heads, model_dimension, feed_forward_dimension):
-        self.multi_head_attention = MultiHeadAttention(num_heads, model_dimension)
+    def __init__(self,
+                 num_heads,
+                 key_dimension,
+                 value_dimension,
+                 model_dimension,
+                 feed_forward_dimension,
+                 max_sequence_length,
+    ):
+        self.multi_head_attention = MultiHeadAttention(num_heads,
+                                                       model_dimension,
+                                                       key_dimension,
+                                                       value_dimension,
+                                                       max_sequence_length)
         self.feed_forward_network = FeedForwardNetwork(model_dimension, feed_forward_dimension)
-    # three components:
-    # multihead attention
-    # add and norm
-    # feedforward
-    """
-    "We employ a residual connection [11] around each of
-    the two sub-layers, followed by layer normalization [1]. That is, the output of each sub-layer is
-    LayerNorm(x + Sublayer(x)), where Sublayer(x) is the function implemented by the sub-layer
-    itself."
-    """
-    def forwardPass(self):
-        self.multi_head_attention.computeMultiHeadAttention()
 
+    def forwardPass(self, input):
+        attention = self.multi_head_attention.computeMultiHeadAttention(input)
+        added_and_normed_attention = self.add_and_norm(input, attention)
 
-    @staticmethod
-    def computeResidual(input, sublayer_function):
-        return input + sublayer_function(input)
+        feed_forward_output = self.feed_forward_network.forwardPass(added_and_normed_attention)
+        added_and_normed_feed_forward_output = self.normalize(feed_forward_output)
+
+        return added_and_normed_feed_forward_output
+
 
     @staticmethod
     def normalize(weights):
@@ -93,55 +138,72 @@ class TransformerLayer:
         normed = self.normalize(residual)
         return normed
 
+
 class MultiHeadAttention:
     def __init__(self,
                  num_heads,
                  model_dimension,
                  key_dimension,
                  value_dimension,
-                 max_sequence_length
-                 ):
+                 max_sequence_length,
+    ):
         self.num_heads = num_heads
         self.model_dimension = model_dimension
 
+        self.query_weights = xavier_initialize(model_dimension, model_dimension)
+        self.key_weights = xavier_initialize(model_dimension, model_dimension)
+        self.value_weights = xavier_initialize(model_dimension, model_dimension)
+
         self.heads = []
         for _ in range(self.num_heads):
-            self.heads.append(AttentionHead())
+            self.heads.append(AttentionHead(
+                model_dimension,
+                key_dimension,
+                value_dimension,
+            ))
 
-        # TODO are these in/out dimensions right? Is this even the right way to initialize?
-        self.queries = xavier_initialize(max_sequence_length, key_dimension)
-        self.keys = xavier_initialize(max_sequence_length, key_dimension)
-        self.values = xavier_initialize(max_sequence_length, value_dimension)
+        self.overall_projection = xavier_initialize(value_dimension * num_heads, model_dimension)
 
-        self.query_projection = xavier_initialize(model_dimension, key_dimension)
-        self.key_projection = xavier_initialize(model_dimension, key_dimension)
-        self.value_projection = xavier_initialize(model_dimension, value_dimension)
-        self.overall_projection = xavier_initialize(model_dimension * num_heads, model_dimension)
-
-    def computeMultiHeadAttention(
-            self,
-            queries,
-            keys,
-            values,
-            query_projection,
-            key_projection,
-            value_projection,
-            overall_projection
-        ):
+    def computeMultiHeadAttention(self, input):
+        """
+        "Attention alone, that attention which is so full that the 'I' disappears, is
+        required of me." -Simone Weil
+        """
         concatenated_attentions = np.array([])
+        head_outputs = []
         for head in self.heads:
-            single_head_attention = head.computeAttention(
-                np.dot(queries, query_projection),
-                np.dot(keys, key_projection),
-                np.dot(values, value_projection)
+            single_head_attention = head.forwardPass(
+                input,
+                self.query_weights,
+                self.key_weights,
+                self.value_weights,
             )
-            concatenated_attentions.append(single_head_attention)
-        return np.dot(concatenated_attentions, overall_projection)
+            head_outputs.append(single_head_attention)
+            concatenated_attentions = np.concatenate(head_outputs, axis=1)
+        return np.dot(concatenated_attentions, self.overall_projection)
 
 
 class AttentionHead:
-    def __init__(self):
+    def __init__(self,
+                 model_dimension,
+                 key_dimension,
+                 value_dimension,
+    ):
+        self.query_projection = xavier_initialize(model_dimension, key_dimension)
+        self.key_projection = xavier_initialize(model_dimension, key_dimension)
+        self.value_projection = xavier_initialize(model_dimension, value_dimension)
         pass
+
+    def forwardPass(self, input, query_weights, key_weights, value_weights):
+        queries = np.dot(input, query_weights)
+        keys = np.dot(input, key_weights)
+        values = np.dot(input, value_weights)
+        
+        projected_queries = np.dot(queries, self.query_projection)
+        projected_keys = np.dot(keys, self.key_projection)
+        projected_values = np.dot(values, self.value_projection)
+
+        return self.computeAttention(projected_queries, projected_keys, projected_values)
 
     def computeAttention(self, queries, keys, values, mask=True):
         dot_products = np.dot(queries, np.transpose(keys))
