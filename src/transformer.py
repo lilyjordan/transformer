@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from utils import softmax, relu, xavier_initialize
+from transformers import GPT2TokenizerFast
 
 
 class Transformer:
@@ -35,6 +36,12 @@ class Transformer:
     def backprop(self):
         raise NotImplementedError
 
+    def tokenize(self, input):
+        """
+        "A mind enclosed in language is in prison." -Simone Weil
+        """
+        tokens = self.tokenizer(input)['input_ids']
+        return tokens
     def computePositionalEmbeddingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEmbedding),

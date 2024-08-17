@@ -9,6 +9,11 @@ class TestTransformer(unittest.TestCase):
     def setUp(self):
         self.transformer = Transformer(model_dimension=8)
 
+    def testTokenize(self):
+        result = self.transformer.tokenize("My hovercraft is full of eels.")
+        self.assertIsInstance(result, list)
+        self.assertTrue(all(isinstance(item, int) for item in result))
+
     def testComputePositionalEmbeddingOdd(self):
         token_index = 30
         embedding_index = 1
