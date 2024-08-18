@@ -58,7 +58,7 @@ class Transformer:
             in_dimension=model_dimension, out_dimension=1
         )
 
-        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+        self.embedding_layer = EmbeddingLayer(self.model_dimension)
 
     def train(self, inputs):
         #  TODO create a batch_size instance variable in the constructor
@@ -88,13 +88,6 @@ class Transformer:
         #  TODO I think we'll want off-the-shelf Adam for this
         raise NotImplementedError
 
-    def tokenize(self, input):
-        """
-        "A mind enclosed in language is in prison." -Simone Weil
-        """
-        tokens = self.tokenizer(input)["input_ids"]
-        return tokens
-
     def computePositionalEncodingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEncoding),
@@ -115,15 +108,21 @@ class Transformer:
         )
 
 
-class InputEmbedding:
-    def __init__(self):
-        # TODO define embedding matrix
-        pass
+class EmbeddingLayer:
+    def __init__(self, model_dimension):
+        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+        self.embeddings = xavier_initialize(self.tokenizer.vocab_size, model_dimension)
 
     def forwardPass(self, input):
-        tokens = tokenized(input)
-        # TODO look up embedding for each token
-        # TODO return np array of embeddings, one embedding per token. these will have model_dimension I think
+        tokens = self.tokenize(input)
+        return self.embeddings[tokens]
+
+    def tokenize(self, input):
+        """
+        "A mind enclosed in language is in prison." -Simone Weil
+        """
+        tokens = self.tokenizer(input)["input_ids"]
+        return tokens
 
 
 class TransformerLayer:
