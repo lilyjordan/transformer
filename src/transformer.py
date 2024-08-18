@@ -95,21 +95,21 @@ class Transformer:
         tokens = self.tokenizer(input)["input_ids"]
         return tokens
 
-    def computePositionalEmbeddingMatrix(self):
+    def computePositionalEncodingMatrix(self):
         return np.fromfunction(
-            np.vectorize(self.computePositionalEmbedding),
+            np.vectorize(self.computePositionalEncoding),
             (self.max_sequence_length, self.model_dimension),
         )
 
-    def computePositionalEmbedding(self, token_index, embedding_index):
+    def computePositionalEncoding(self, token_index, embedding_index):
         if embedding_index % 2 == 0:
-            return math.sin(self.scalePositionalEmbedding(token_index, embedding_index))
+            return math.sin(self.scalePositionalEncoding(token_index, embedding_index))
         else:
             return math.cos(
-                self.scalePositionalEmbedding(token_index, embedding_index - 1)
+                self.scalePositionalEncoding(token_index, embedding_index - 1)
             )
 
-    def scalePositionalEmbedding(self, token_index, embedding_index):
+    def scalePositionalEncoding(self, token_index, embedding_index):
         return token_index / (
             self.scaling_factor ** (embedding_index / self.model_dimension)
         )
@@ -117,10 +117,13 @@ class Transformer:
 
 class InputEmbedding:
     def __init__(self):
+        # TODO define embedding matrix
         pass
 
-    def forwardPass(self):
-        pass
+    def forwardPass(self, input):
+        tokens = tokenized(input)
+        # TODO look up embedding for each token
+        # TODO return np array of embeddings, one embedding per token. these will have model_dimension I think
 
 
 class TransformerLayer:
