@@ -53,7 +53,6 @@ class Transformer:
                 )
             )
 
-        #  TODO are these dimensions right?
         self.embeddings = xavier_initialize(
             in_dimension=model_dimension, out_dimension=1
         )
@@ -90,11 +89,10 @@ class Transformer:
 
 
 class EmbeddingLayer:
-    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
+    def __init__(self, model_dimension):
         self.model_dimension = model_dimension
-        self.scaling_factor = scaling_factor
-        self.max_sequence_length = max_sequence_length
         self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+        m
         self.embeddings = xavier_initialize(self.tokenizer.vocab_size, model_dimension)
 
     def forwardPass(self, input):
@@ -107,6 +105,13 @@ class EmbeddingLayer:
         """
         tokens = self.tokenizer(input)["input_ids"]
         return tokens
+
+
+class PositionalEncodingLayer:
+    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
+        self.model_dimension = model_dimension
+        self.scaling_factor = scaling_factor
+        self.max_sequence_length = max_sequence_length
 
     def computePositionalEncodingMatrix(self):
         return np.fromfunction(

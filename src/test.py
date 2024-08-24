@@ -1,5 +1,10 @@
 import unittest
-from transformer import Transformer, EmbeddingLayer, AttentionHead
+from transformer import (
+    Transformer,
+    EmbeddingLayer,
+    PositionalEncodingLayer,
+    AttentionHead,
+)
 from utils import softmax
 import numpy as np
 
@@ -11,34 +16,43 @@ class TestTransformer(unittest.TestCase):
 
 class TestEmbeddingLayer(unittest.TestCase):
     def setUp(self):
-        self.embedding_layer = EmbeddingLayer(
-            model_dimension=8, scaling_factor=10000, max_sequence_length=200
-        )
+        self.embedding_layer = EmbeddingLayer(model_dimension=8)
 
     def testTokenize(self):
         result = self.embedding_layer.tokenize("My hovercraft is full of eels.")
         self.assertIsInstance(result, list)
         self.assertTrue(all(isinstance(item, int) for item in result))
 
+
+class TestPositionalEncodingLayer(unittest.TestCase):
+    def setUp(self):
+        self.positional_encoding_layer = PositionalEncodingLayer(
+            model_dimension=8, scaling_factor=10000, max_sequence_length=200
+        )
+
     def testComputePositionalEncodingOdd(self):
         token_index = 30
         embedding_index = 1
-        self.embedding_layer.computePositionalEncoding(token_index, embedding_index)
+        self.positional_encoding_layer.computePositionalEncoding(
+            token_index, embedding_index
+        )
         # TODO check against reference values
 
     def testComputePositionalEncodingEven(self):
         token_index = 30
         embedding_index = 2
-        self.embedding_layer.computePositionalEncoding(token_index, embedding_index)
+        self.positional_encoding_layer.computePositionalEncoding(
+            token_index, embedding_index
+        )
         # TODO check against reference values
 
     def testComputePositionalEncodingMatrix(self):
-        result = self.embedding_layer.computePositionalEncodingMatrix()
+        result = self.positional_encoding_layer.computePositionalEncodingMatrix()
         self.assertEqual(
             result.shape,
             (
-                self.embedding_layer.max_sequence_length,
-                self.embedding_layer.model_dimension,
+                self.positional_encoding_layer.max_sequence_length,
+                self.positional_encoding_layer.model_dimension,
             ),
         )
         # TODO check against reference values
@@ -51,9 +65,9 @@ class TestEmbeddingLayer(unittest.TestCase):
         = 3
         """
         token_index = 30
-        embedding_index = 2
-        result = self.embedding_layer.scalePositionalEncoding(
-            token_index, embedding_index
+        encoding_index = 2
+        result = self.positional_encoding_layer.scalePositionalEncoding(
+            token_index, encoding_index
         )
         self.assertEqual(result, 3)
 
