@@ -88,6 +88,26 @@ class Transformer:
         #  TODO I think we'll want off-the-shelf Adam for this
         raise NotImplementedError
 
+
+class EmbeddingLayer:
+    def __init__(self, model_dimension, scaling_factor, max_sequence_length):
+        self.model_dimension = model_dimension
+        self.scaling_factor = scaling_factor
+        self.max_sequence_length = max_sequence_length
+        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+        self.embeddings = xavier_initialize(self.tokenizer.vocab_size, model_dimension)
+
+    def forwardPass(self, input):
+        tokens = self.tokenize(input)
+        return self.embeddings[tokens]
+
+    def tokenize(self, input):
+        """
+        "A mind enclosed in language is in prison." -Simone Weil
+        """
+        tokens = self.tokenizer(input)["input_ids"]
+        return tokens
+
     def computePositionalEncodingMatrix(self):
         return np.fromfunction(
             np.vectorize(self.computePositionalEncoding),
@@ -106,23 +126,6 @@ class Transformer:
         return token_index / (
             self.scaling_factor ** (embedding_index / self.model_dimension)
         )
-
-
-class EmbeddingLayer:
-    def __init__(self, model_dimension):
-        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-        self.embeddings = xavier_initialize(self.tokenizer.vocab_size, model_dimension)
-
-    def forwardPass(self, input):
-        tokens = self.tokenize(input)
-        return self.embeddings[tokens]
-
-    def tokenize(self, input):
-        """
-        "A mind enclosed in language is in prison." -Simone Weil
-        """
-        tokens = self.tokenizer(input)["input_ids"]
-        return tokens
 
 
 class TransformerLayer:
